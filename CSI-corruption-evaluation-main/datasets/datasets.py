@@ -242,6 +242,8 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         n_classes = 2
         test_set = MNIST_Dataset(train=False, transform=test_transform, test_id=1)
         test_set2 = MNIST_Dataset(train=False, transform=test_transform, test_id=2)
+        if test_only:
+            test_set = test_set2
         train_set = MNIST_Dataset(train=True, transform=train_transform)
     elif dataset == 'svhn':
         image_size = (32, 32, 3)
