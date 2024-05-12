@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import numpy as np
 import torch
@@ -40,8 +41,6 @@ CIFAR100_SUPERCLASS = [
     [41, 69, 81, 85, 89],
 ]
 
-
-
 import torch
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
@@ -51,7 +50,7 @@ from PIL import Image
 
 def sparse2coarse(targets):
     coarse_labels = np.array(
-        [4,1,14, 8, 0, 6, 7, 7, 18, 3, 3,
+        [4, 1, 14, 8, 0, 6, 7, 7, 18, 3, 3,
          14, 9, 18, 7, 11, 3, 9, 7, 11, 6, 11, 5,
          10, 7, 6, 13, 15, 3, 15, 0, 11, 1, 10,
          12, 14, 16, 9, 11, 5, 5, 19, 8, 8, 15,
@@ -59,11 +58,13 @@ def sparse2coarse(targets):
          17, 4, 18, 17, 10, 3, 2, 12, 12, 16, 12,
          1, 9, 19, 2, 10, 0, 1, 16, 12, 9, 13,
          15, 13, 16, 19, 2, 4, 6, 19, 5, 5, 8,
-         19, 18, 1, 2, 15, 6, 0, 17, 8, 14, 13,])
+         19, 18, 1, 2, 15, 6, 0, 17, 8, 14, 13, ])
     return coarse_labels[targets]
 
+
 class CIFAR_CORRUCPION(Dataset):
-    def __init__(self, transform=None, normal_idx = [0], cifar_corruption_label = 'CIFAR-10-C/labels.npy', cifar_corruption_data = './CIFAR-10-C/defocus_blur.npy'):
+    def __init__(self, transform=None, normal_idx=[0], cifar_corruption_label='CIFAR-10-C/labels.npy',
+                 cifar_corruption_data='./CIFAR-10-C/defocus_blur.npy'):
         self.labels_10 = np.load(cifar_corruption_label)
         self.labels_10 = self.labels_10[40000:50000]
         if cifar_corruption_label == 'CIFAR-100-C/labels.npy':
@@ -71,17 +72,18 @@ class CIFAR_CORRUCPION(Dataset):
         self.data = np.load(cifar_corruption_data)
         self.data = self.data[40000:50000]
         self.transform = transform
-       
+
     def __getitem__(self, index):
         x = self.data[index]
         y = self.labels_10[index]
         if self.transform:
             x = Image.fromarray(x.astype(np.uint8))
-            x = self.transform(x)    
+            x = self.transform(x)
         return x, y
-    
+
     def __len__(self):
         return len(self.data)
+
 
 class MultiDataTransform(object):
     def __init__(self, transform):
@@ -166,6 +168,44 @@ def get_transform_imagenet():
     return train_transform, test_transform
 
 
+class MNIST_Dataset(Dataset):
+    def __init__(self, train, test_id=1, transform=None):
+        self.transform = transform
+        self.train = train
+        self.test_id = test_id
+        if train:
+            with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/train_normal.pkl', 'rb') as f:
+                normal_train = pickle.load(f)
+            self.images = normal_train['images']
+            self.labels = [0]*len(self.images)
+        else:
+            if test_id == 1:
+                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_normal_main.pkl', 'rb') as f:
+                    normal_test = pickle.load(f)
+                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_abnormal_main.pkl', 'rb') as f:
+                    abnormal_test = pickle.load(f)
+                self.images = normal_test['images'] + abnormal_test['images']
+                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+            else:
+                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_normal_shifted.pkl', 'rb') as f:
+                    normal_test = pickle.load(f)
+                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_abnormal_shifted.pkl', 'rb') as f:
+                    abnormal_test = pickle.load(f)
+                self.images = normal_test['images'] + abnormal_test['images']
+                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+
+    def __getitem__(self, index):
+        image = torch.tensor(self.images[index])
+
+        if self.transform is not None:
+            image = self.transform(image)
+        target = 0 if self.train else self.labels[index]
+
+        return image, target
+
+    def __len__(self):
+        return len(self.images)
+
 def get_dataset(P, dataset, test_only=False, image_size=None, download=False, eval=False):
     download = True
     if dataset in ['imagenet', 'cub', 'stanford_dogs', 'flowers102',
@@ -183,11 +223,17 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         n_classes = 10
         train_set = datasets.CIFAR10(DATA_PATH, train=True, download=download, transform=train_transform)
         test_set = datasets.CIFAR10(DATA_PATH, train=False, download=download, transform=test_transform)
+    elif dataset == 'fmnist':
+        image_size = (image_size, image_size, 3)
+        n_classes = 2
+        test_set = MNIST_Dataset(train=False, transform=test_transform, test_id=1)
+        test_set2 = MNIST_Dataset(train=False, transform=test_transform, test_id=2)
+        train_set = MNIST_Dataset(train=True, transform=train_transform)
     elif dataset == 'svhn':
-            image_size = (32, 32, 3)
-            n_classes = 10
-            train_set = datasets.SVHN(DATA_PATH, split='train', download=download, transform=test_transform)
-            test_set = datasets.SVHN(DATA_PATH, split='test', download=download, transform=test_transform)
+        image_size = (32, 32, 3)
+        n_classes = 10
+        train_set = datasets.SVHN(DATA_PATH, split='train', download=download, transform=test_transform)
+        test_set = datasets.SVHN(DATA_PATH, split='test', download=download, transform=test_transform)
     elif dataset == 'svhn-10':
         image_size = (32, 32, 3)
         n_classes = 10
@@ -199,11 +245,12 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         test_set = datasets.SVHN(DATA_PATH, split='test', download=download, transform=transform)
         print("train_set shapes: ", train_set[0][0].shape)
         print("test_set shapes: ", test_set[0][0].shape)
-    
+
     elif dataset == 'svhn-10-corruption':
         image_size = (32, 32, 3)
-        def gaussian_noise(image, mean=P.noise_mean, std = P.noise_std, noise_scale = P.noise_scale):
-            image = image + (torch.randn(image.size()) * std + mean)*noise_scale
+
+        def gaussian_noise(image, mean=P.noise_mean, std=P.noise_std, noise_scale=P.noise_scale):
+            image = image + (torch.randn(image.size()) * std + mean) * noise_scale
             return image
 
         n_classes = 10
@@ -274,31 +321,32 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         n_classes = 100
         train_set = datasets.CIFAR100(DATA_PATH, train=True, download=download, transform=train_transform)
         test_set = datasets.CIFAR100(DATA_PATH, train=False, download=download, transform=test_transform)
-    elif dataset=='cifar10-corruption':
+    elif dataset == 'cifar10-corruption':
         n_classes = 10
         transform = transforms.Compose([
-                transforms.Resize(32),
-                transforms.ToTensor(),
+            transforms.Resize(32),
+            transforms.ToTensor(),
         ])
         test_set = CIFAR_CORRUCPION(transform=transform, cifar_corruption_data=P.cifar_corruption_data)
         train_set = datasets.CIFAR10(DATA_PATH, train=True, download=download, transform=transform)
         print("train_set shapes: ", train_set[0][0].shape)
         print("test_set shapes: ", test_set[0][0].shape)
-    
-    elif dataset=='cifar100-corruption':
+
+    elif dataset == 'cifar100-corruption':
         n_classes = 100
         transform = transforms.Compose([
-                transforms.Resize(32),
-                transforms.ToTensor(),
+            transforms.Resize(32),
+            transforms.ToTensor(),
         ])
-        test_set = CIFAR_CORRUCPION(transform=transform, cifar_corruption_label='CIFAR-100-C/labels.npy', cifar_corruption_data=P.cifar_corruption_data)
+        test_set = CIFAR_CORRUCPION(transform=transform, cifar_corruption_label='CIFAR-100-C/labels.npy',
+                                    cifar_corruption_data=P.cifar_corruption_data)
         train_set = datasets.CIFAR100(DATA_PATH, train=True, download=download, transform=transform)
-        
+
         train_set.targets = sparse2coarse(train_set.targets)
 
         print("train_set shapes: ", train_set[0][0].shape)
         print("test_set shapes: ", test_set[0][0].shape)
-    
+
     elif dataset == 'svhn':
         assert test_only and image_size is not None
         test_set = datasets.SVHN(DATA_PATH, split='test', download=download, transform=test_transform)
@@ -389,7 +437,7 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
 
 
 def get_superclass_list(dataset):
-    if dataset == 'cifar10' or dataset=='cifar10-corruption' or dataset=='svhn' or dataset=='svhn-10-corruption' or dataset=='svhn-10' or dataset=='fashion-mnist' or dataset=='mnist':
+    if dataset == 'cifar10' or dataset == 'cifar10-corruption' or dataset == 'svhn' or dataset == 'svhn-10-corruption' or dataset == 'svhn-10' or dataset == 'fashion-mnist' or dataset == 'mnist':
         return CIFAR10_SUPERCLASS
     elif dataset == 'cifar100':
         return CIFAR100_SUPERCLASS
@@ -408,7 +456,7 @@ def get_subclass_dataset(dataset, classes):
         classes = [classes]
 
     indices = []
-    try:        
+    try:
         for idx, tgt in enumerate(dataset.targets):
             if tgt in classes:
                 indices.append(idx)
