@@ -217,6 +217,18 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
                                                                                  P.resize_factor, P.resize_fix)
         else:
             train_transform, test_transform = get_transform_imagenet()
+    elif dataset == 'fmnist':
+        train_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((image_size[0], image_size[1])),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ])
+        test_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((image_size[0], image_size[1])),
+            transforms.ToTensor(),
+        ])
     else:
         train_transform, test_transform = get_transform(image_size=image_size)
 
