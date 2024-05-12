@@ -220,13 +220,13 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
     elif dataset == 'fmnist':
         train_transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((image_size[0], image_size[1])),
+            transforms.Resize((224, 224)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
         ])
         test_transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((image_size[0], image_size[1])),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
     else:
@@ -238,7 +238,7 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         train_set = datasets.CIFAR10(DATA_PATH, train=True, download=download, transform=train_transform)
         test_set = datasets.CIFAR10(DATA_PATH, train=False, download=download, transform=test_transform)
     elif dataset == 'fmnist':
-        image_size = (image_size, image_size, 3)
+        image_size = (224, 224, 3)
         n_classes = 2
         test_set = MNIST_Dataset(train=False, transform=test_transform, test_id=1)
         test_set2 = MNIST_Dataset(train=False, transform=test_transform, test_id=2)
