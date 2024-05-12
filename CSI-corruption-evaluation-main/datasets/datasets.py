@@ -18,6 +18,8 @@ IMAGENET_SUPERCLASS = list(range(30))  # one class
 
 IMAGENET30_SUPERCLASS = list(range(2))
 
+FMNIST_SUPERCLASS = list(range(2))
+
 CIFAR100_SUPERCLASS = [
     [4, 31, 55, 72, 95],
     [1, 33, 67, 73, 91],
@@ -447,6 +449,8 @@ def get_superclass_list(dataset):
         return CIFAR100_CORUPTION_SUPERCLASS
     elif dataset == 'imagenet':
         return IMAGENET_SUPERCLASS
+    elif dataset == 'fmnist':
+        return FMNIST_SUPERCLASS
     else:
         raise NotImplementedError()
 
