@@ -50,10 +50,6 @@ def train(P, epoch, model, criterion, optimizer, scheduler, loader, logger=None,
             batch_size = images[0].size(0)
             images1, images2 = images[0].to(device), images[1].to(device)
         labels = labels.to(device)
-        print(P.K_shift)
-        print(images1.shape)
-        print(images2.shape)
-        print(P.shift_trans(images1, 0).shape)
         images1 = torch.cat([P.shift_trans(images1, k) for k in range(P.K_shift)])
         images2 = torch.cat([P.shift_trans(images2, k) for k in range(P.K_shift)])
         shift_labels = torch.cat([torch.ones_like(labels) * k for k in range(P.K_shift)], 0)  # B -> 4B
