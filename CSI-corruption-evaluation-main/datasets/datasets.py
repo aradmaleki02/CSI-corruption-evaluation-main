@@ -239,6 +239,7 @@ class ISIC2018(Dataset):
 def get_dataset(P, dataset, test_only=False, image_size=None, download=False, eval=False):
     download = True
     image_size = (P.image_size, P.image_size, 3)
+    print(image_size)
     if dataset in ['imagenet', 'cub', 'stanford_dogs', 'flowers102',
                    'places365', 'food_101', 'caltech_256', 'dtd', 'pets']:
         if eval:

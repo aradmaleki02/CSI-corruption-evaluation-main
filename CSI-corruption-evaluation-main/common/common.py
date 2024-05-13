@@ -38,6 +38,8 @@ def parse_args(default=False):
                         default='ood_pre', type=str)
     parser.add_argument('--simclr_dim', help='Dimension of simclr layer',
                         default=128, type=int)
+    parser.add_argument('--image_size', help='image size',
+                        default=224, type=int)
 
     parser.add_argument('--shift_trans_type', help='shifting transformation type', default='none',
                         choices=['rotation', 'cutperm', 'none'], type=str)
