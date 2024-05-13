@@ -257,6 +257,16 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
+    elif dataset == 'isic':
+        train_transform = transforms.Compose([
+            transforms.Resize((32, 32)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ])
+        test_transform = transforms.Compose([
+            transforms.Resize((32, 32)),
+            transforms.ToTensor(),
+        ])
     else:
         train_transform, test_transform = get_transform(image_size=image_size)
 
