@@ -238,6 +238,7 @@ class ISIC2018(Dataset):
 
 def get_dataset(P, dataset, test_only=False, image_size=None, download=False, eval=False):
     download = True
+    image_size = (P.image_size, P.image_size, 3)
     if dataset in ['imagenet', 'cub', 'stanford_dogs', 'flowers102',
                    'places365', 'food_101', 'caltech_256', 'dtd', 'pets']:
         if eval:
@@ -259,12 +260,12 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         ])
     elif dataset == 'isic':
         train_transform = transforms.Compose([
-            transforms.Resize((32, 32)),
+            transforms.Resize((image_size[0], image_size[1])),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
         ])
         test_transform = transforms.Compose([
-            transforms.Resize((32, 32)),
+            transforms.Resize((image_size[0], image_size[1])),
             transforms.ToTensor(),
         ])
     else:
@@ -284,7 +285,7 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             test_set = test_set2
         train_set = MNIST_Dataset(train=True, transform=train_transform)
     elif dataset == 'isic':
-        image_size = (32, 32, 3)
+        # image_size = (32, 32, 3)
         n_classes = 2
         from glob import glob
         import pandas as pd
