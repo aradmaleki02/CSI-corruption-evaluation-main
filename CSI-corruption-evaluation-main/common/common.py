@@ -95,6 +95,8 @@ def parse_args(default=False):
                         default=1, type=int)
     parser.add_argument("--ood_batch_size", help='batch size to compute OOD score',
                         default=100, type=int)
+    parser.add_argument("--test_id", help='batch size to compute OOD score',
+                        default=1, type=int)
     parser.add_argument("--resize_factor", help='resize scale is sampled from [resize_factor, 1.0]',
                         default=0.08, type=float)
     parser.add_argument("--resize_fix", help='resize scale is fixed to resize_factor (not (resize_factor, 1.0])',

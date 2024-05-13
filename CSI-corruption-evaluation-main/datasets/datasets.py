@@ -208,6 +208,34 @@ class MNIST_Dataset(Dataset):
     def __len__(self):
         return len(self.images)
 
+import random
+class ISIC2018(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)
+
 def get_dataset(P, dataset, test_only=False, image_size=None, download=False, eval=False):
     download = True
     if dataset in ['imagenet', 'cub', 'stanford_dogs', 'flowers102',
@@ -242,9 +270,38 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         n_classes = 2
         test_set = MNIST_Dataset(train=False, transform=test_transform, test_id=1)
         test_set2 = MNIST_Dataset(train=False, transform=test_transform, test_id=2)
-        # if test_only:
-        #     test_set = test_set2
+        if P.test_id != 1:
+            test_set = test_set2
         train_set = MNIST_Dataset(train=True, transform=train_transform)
+    elif dataset == 'isic':
+        image_size = (32, 32, 3)
+        n_classes = 2
+        from glob import glob
+        import pandas as pd
+        train_path = glob('/kaggle/input/isic-task3-dataset/dataset/train/NORMAL/*')
+        train_label = [0] * len(train_path)
+        test_anomaly_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/ABNORMAL/*')
+        test_anomaly_label = [1] * len(test_anomaly_path)
+        test_normal_path = glob('/kaggle/input/isic-task3-dataset/dataset/test/NORMAL/*')
+        test_normal_label = [0] * len(test_normal_path)
+
+        test_label = test_anomaly_label + test_normal_label
+        test_path = test_anomaly_path + test_normal_path
+
+        df = pd.read_csv('/kaggle/input/pad-ufes-20/PAD-UFES-20/metadata.csv')
+
+        shifted_test_label = df["diagnostic"].to_numpy()
+        shifted_test_label = (shifted_test_label != "NEV")
+        # shifted_test_label = [0 if shifted_test_label[i] is False else 1 for i in range(len(shifted_test_label))]
+
+        shifted_test_path = df["img_id"].to_numpy()
+        shifted_test_path = '/kaggle/input/pad-ufes-20/PAD-UFES-20/Dataset/' + shifted_test_path
+
+        train_set = ISIC2018(image_path=train_path, labels=train_label, transform=train_transform)
+        test_set = ISIC2018(image_path=test_path, labels=test_label, transform=test_transform)
+        if P.test_id == 2:
+            test_set = ISIC2018(image_path=shifted_test_path, labels=shifted_test_label, transform=test_transform)
+
     elif dataset == 'svhn':
         image_size = (32, 32, 3)
         n_classes = 10
