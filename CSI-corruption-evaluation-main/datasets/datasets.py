@@ -520,7 +520,7 @@ def get_superclass_list(dataset):
         return CIFAR100_CORUPTION_SUPERCLASS
     elif dataset == 'imagenet':
         return IMAGENET_SUPERCLASS
-    elif dataset == 'fmnist':
+    elif dataset == 'fmnist' or dataset == 'isic':
         return FMNIST_SUPERCLASS
     else:
         raise NotImplementedError()
