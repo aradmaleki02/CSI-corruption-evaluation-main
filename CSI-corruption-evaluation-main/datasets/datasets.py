@@ -391,6 +391,57 @@ def get_gta_globs():
     return glob_train_id, glob_test_id, glob_ood
 
 
+class Waterbird(torch.utils.data.Dataset):
+    def __init__(self, root, df, transform, train=True, count_train_landbg=-1, count_train_waterbg=-1, mode='bg_all',
+                 count=-1, return_num=2):
+        self.transform = transform
+        self.train = train
+        self.df = df
+        lb_on_l = df[(df['y'] == 0) & (df['place'] == 0)]
+        lb_on_w = df[(df['y'] == 0) & (df['place'] == 1)]
+        self.normal_paths = []
+        self.labels = []
+        self.return_num = return_num
+
+        normal_df = lb_on_l.iloc[:count_train_landbg]
+        normal_df_np = normal_df['img_filename'].to_numpy()
+        self.normal_paths.extend([os.path.join(root, x) for x in normal_df_np][:count_train_landbg])
+        normal_df = lb_on_w.iloc[:count_train_waterbg]
+        normal_df_np = normal_df['img_filename'].to_numpy()
+        self.normal_paths.extend([os.path.join(root, x) for x in normal_df_np][:count_train_waterbg])
+
+        if train:
+            self.image_paths = self.normal_paths
+        else:
+            self.image_paths = []
+            if mode == 'bg_all':
+                dff = df
+            elif mode == 'bg_water':
+                dff = df[(df['place'] == 1)]
+            elif mode == 'bg_land':
+                dff = df[(df['place'] == 0)]
+            else:
+                print('Wrong mode!')
+                raise ValueError('Wrong bg mode!')
+            all_paths = dff[['img_filename', 'y']].to_numpy()
+            for i in range(len(all_paths)):
+                full_path = os.path.join(root, all_paths[i][0])
+                if full_path not in self.normal_paths:
+                    self.image_paths.append(full_path)
+                    self.labels.append(all_paths[i][1])
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        img_path = self.image_paths[idx]
+        img = Image.open(img_path).convert('RGB')
+        img = self.transform(img)
+        target = 0 if self.train else self.labels[idx]
+
+        return img, target
+
+
 def get_dataset(P, dataset, test_only=False, image_size=None, download=False, eval=False):
     download = True
     image_size = (P.image_size, P.image_size, 3)
@@ -426,7 +477,7 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
-    elif dataset in ['isic', 'gta']:
+    elif dataset in ['isic', 'gta', 'waterbirds']:
         train_transform = transforms.Compose([
             transforms.Resize((image_size[0], image_size[1])),
             transforms.RandomHorizontalFlip(),
@@ -460,6 +511,19 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         if P.test_id == 2:
             test_set = test_set2
         train_set = MNIST_Dataset(train=True, transform=train_transform)
+    elif dataset == 'waterbirds':
+        import pandas as pd
+        df = pd.read_csv('/kaggle/input/waterbird/waterbird/metadata.csv')
+        train_set = Waterbird(root='/kaggle/input/waterbird/waterbird', df=df,
+                                       transform=train_transform, train=True, count_train_landbg=3500,
+                                       count_train_waterbg=100)
+        test_set = Waterbird(root='/kaggle/input/waterbird/waterbird', df=df,
+                                       transform=test_transform, train=False, count_train_landbg=3500,
+                                       count_train_waterbg=100, mode='bg_land')
+        if P.test_id == 2:
+            test_set = Waterbird(root='/kaggle/input/waterbird/waterbird', df=df,
+                                       transform=test_transform, train=False, count_train_landbg=3500,
+                                       count_train_waterbg=100, mode='bg_water')
     elif dataset == 'isic':
         # image_size = (32, 32, 3)
         n_classes = 2
