@@ -661,6 +661,10 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             prepare_brats2015_dataset_files()
             P.brain_prepared = True
         n_classes = 2
+        train_set = BrainTrain(transform=train_transform)
+        test_set = BrainTest(transform=test_transform, test_id=1)
+        if P.test_id == 2:
+            test_set = BrainTest(transform=test_transform, test_id=2)
     elif dataset == 'waterbirds':
         n_classes = 2
         import pandas as pd
