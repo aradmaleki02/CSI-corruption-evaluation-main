@@ -6,8 +6,7 @@ def parse_args(default=False):
 
     parser = ArgumentParser(description='Pytorch implementation of CSI')
 
-    parser.add_argument('--dataset', help='Dataset',
-                        choices=['isic', 'imagenet30', 'fmnist', 'mnist', 'fashion-mnist', 'svhn-10-corruption', 'svhn-10', 'cifar100-corruption', 'svhn', 'cifar10-corruption', 'cifar10', 'cifar100', 'imagenet'], default="cifar10", type=str)
+    parser.add_argument('--dataset', help='Dataset', default="cifar10", type=str)
     parser.add_argument('--desired_attack', help='desired_attack',
                         choices=['PGD', 'FGSM'],
                         default="PGD", type=str)

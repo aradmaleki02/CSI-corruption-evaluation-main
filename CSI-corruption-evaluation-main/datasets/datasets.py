@@ -176,6 +176,47 @@ class MNIST_Dataset(Dataset):
         self.train = train
         self.test_id = test_id
         if train:
+            with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/train_normal.pkl', 'rb') as f:
+                normal_train = pickle.load(f)
+            self.images = normal_train['images']
+            self.labels = [0]*len(self.images)
+        else:
+            if test_id == 1:
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_normal_main.pkl', 'rb') as f:
+                    normal_test = pickle.load(f)
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_abnormal_main.pkl', 'rb') as f:
+                    abnormal_test = pickle.load(f)
+                self.images = normal_test['images'] + abnormal_test['images']
+                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+            else:
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_normal_shifted.pkl', 'rb') as f:
+                    normal_test = pickle.load(f)
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_abnormal_shifted.pkl', 'rb') as f:
+                    abnormal_test = pickle.load(f)
+                self.images = normal_test['images'] + abnormal_test['images']
+                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+
+    def __getitem__(self, index):
+        image = torch.tensor(self.images[index])
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        height = image.shape[1]
+        width = image.shape[2]
+        target = 0 if self.train else self.labels[index]
+
+        return image, target
+
+    def __len__(self):
+        return len(self.images)
+
+class FMNIST_Dataset(Dataset):
+    def __init__(self, train, test_id=1, transform=None):
+        self.transform = transform
+        self.train = train
+        self.test_id = test_id
+        if train:
             with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/train_normal.pkl', 'rb') as f:
                 normal_train = pickle.load(f)
             self.images = normal_train['images']
@@ -259,6 +300,18 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
+    elif dataset == 'mn':
+        train_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((224, 224)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ])
+        test_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
     elif dataset == 'isic':
         train_transform = transforms.Compose([
             transforms.Resize((image_size[0], image_size[1])),
@@ -280,9 +333,17 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
     elif dataset == 'fmnist':
         image_size = (224, 224, 3)
         n_classes = 2
+        test_set = FMNIST_Dataset(train=False, transform=test_transform, test_id=1)
+        test_set2 = FMNIST_Dataset(train=False, transform=test_transform, test_id=2)
+        if P.test_id == 2:
+            test_set = test_set2
+        train_set = FMNIST_Dataset(train=True, transform=train_transform)
+    elif dataset == 'mn':
+        image_size = (224, 224, 3)
+        n_classes = 2
         test_set = MNIST_Dataset(train=False, transform=test_transform, test_id=1)
         test_set2 = MNIST_Dataset(train=False, transform=test_transform, test_id=2)
-        if P.test_id != 1:
+        if P.test_id == 2:
             test_set = test_set2
         train_set = MNIST_Dataset(train=True, transform=train_transform)
     elif dataset == 'isic':
@@ -532,10 +593,8 @@ def get_superclass_list(dataset):
         return CIFAR100_CORUPTION_SUPERCLASS
     elif dataset == 'imagenet':
         return IMAGENET_SUPERCLASS
-    elif dataset == 'fmnist' or dataset == 'isic':
-        return FMNIST_SUPERCLASS
     else:
-        raise NotImplementedError()
+        return FMNIST_SUPERCLASS
 
 
 def get_subclass_dataset(dataset, classes):
