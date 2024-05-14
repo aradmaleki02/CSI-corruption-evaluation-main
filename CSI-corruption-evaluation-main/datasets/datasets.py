@@ -656,10 +656,10 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             test_set = test_set2
         train_set = MNIST_Dataset(train=True, transform=train_transform)
     elif dataset == 'brain':
-        if not P.brain_prepared:
+        if P.brain_prepared == 0:
             prepare_br35h_dataset_files()
             prepare_brats2015_dataset_files()
-            P.brain_prepared = True
+            P.brain_prepared = 1
         n_classes = 2
         train_set = BrainTrain(transform=train_transform)
         test_set = BrainTest(transform=test_transform, test_id=1)

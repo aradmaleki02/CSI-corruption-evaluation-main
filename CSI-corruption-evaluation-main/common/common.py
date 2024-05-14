@@ -7,6 +7,7 @@ def parse_args(default=False):
     parser = ArgumentParser(description='Pytorch implementation of CSI')
 
     parser.add_argument('--dataset', help='Dataset', default="cifar10", type=str)
+    parser.add_argument('--brain_prepared', help='brain prep', default=0, type=int)
     parser.add_argument('--desired_attack', help='desired_attack',
                         choices=['PGD', 'FGSM'],
                         default="PGD", type=str)
