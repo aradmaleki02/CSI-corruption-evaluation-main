@@ -176,25 +176,31 @@ class MNIST_Dataset(Dataset):
         self.train = train
         self.test_id = test_id
         if train:
-            with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/train_normal.pkl', 'rb') as f:
+            with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/train_normal.pkl',
+                      'rb') as f:
                 normal_train = pickle.load(f)
             self.images = normal_train['images']
-            self.labels = [0]*len(self.images)
+            self.labels = [0] * len(self.images)
         else:
             if test_id == 1:
-                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_normal_main.pkl', 'rb') as f:
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_normal_main.pkl',
+                          'rb') as f:
                     normal_test = pickle.load(f)
-                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_abnormal_main.pkl', 'rb') as f:
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_abnormal_main.pkl',
+                          'rb') as f:
                     abnormal_test = pickle.load(f)
                 self.images = normal_test['images'] + abnormal_test['images']
-                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+                self.labels = [0] * len(normal_test['images']) + [1] * len(abnormal_test['images'])
             else:
-                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_normal_shifted.pkl', 'rb') as f:
+                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_normal_shifted.pkl',
+                          'rb') as f:
                     normal_test = pickle.load(f)
-                with open('/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_abnormal_shifted.pkl', 'rb') as f:
+                with open(
+                        '/kaggle/input/diagvib-6-mnist-dataset/content/mnist_shifted_dataset/test_abnormal_shifted.pkl',
+                        'rb') as f:
                     abnormal_test = pickle.load(f)
                 self.images = normal_test['images'] + abnormal_test['images']
-                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+                self.labels = [0] * len(normal_test['images']) + [1] * len(abnormal_test['images'])
 
     def __getitem__(self, index):
         image = torch.tensor(self.images[index])
@@ -211,31 +217,40 @@ class MNIST_Dataset(Dataset):
     def __len__(self):
         return len(self.images)
 
+
 class FMNIST_Dataset(Dataset):
     def __init__(self, train, test_id=1, transform=None):
         self.transform = transform
         self.train = train
         self.test_id = test_id
         if train:
-            with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/train_normal.pkl', 'rb') as f:
+            with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/train_normal.pkl',
+                      'rb') as f:
                 normal_train = pickle.load(f)
             self.images = normal_train['images']
-            self.labels = [0]*len(self.images)
+            self.labels = [0] * len(self.images)
         else:
             if test_id == 1:
-                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_normal_main.pkl', 'rb') as f:
+                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_normal_main.pkl',
+                          'rb') as f:
                     normal_test = pickle.load(f)
-                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_abnormal_main.pkl', 'rb') as f:
+                with open(
+                        '/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_abnormal_main.pkl',
+                        'rb') as f:
                     abnormal_test = pickle.load(f)
                 self.images = normal_test['images'] + abnormal_test['images']
-                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+                self.labels = [0] * len(normal_test['images']) + [1] * len(abnormal_test['images'])
             else:
-                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_normal_shifted.pkl', 'rb') as f:
+                with open(
+                        '/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_normal_shifted.pkl',
+                        'rb') as f:
                     normal_test = pickle.load(f)
-                with open('/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_abnormal_shifted.pkl', 'rb') as f:
+                with open(
+                        '/kaggle/input/diagvib-6-fmnist-dataset/content/fmnist_shifted_dataset/test_abnormal_shifted.pkl',
+                        'rb') as f:
                     abnormal_test = pickle.load(f)
                 self.images = normal_test['images'] + abnormal_test['images']
-                self.labels = [0]*len(normal_test['images']) + [1]*len(abnormal_test['images'])
+                self.labels = [0] * len(normal_test['images']) + [1] * len(abnormal_test['images'])
 
     def __getitem__(self, index):
         image = torch.tensor(self.images[index])
@@ -249,7 +264,10 @@ class FMNIST_Dataset(Dataset):
     def __len__(self):
         return len(self.images)
 
+
 import random
+
+
 class ISIC2018(Dataset):
     def __init__(self, image_path, labels, transform=None, count=-1):
         self.transform = transform
@@ -276,6 +294,102 @@ class ISIC2018(Dataset):
 
     def __len__(self):
         return len(self.image_files)
+
+
+class GTA(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, self.labels[index]
+
+
+class GTA_Test(Dataset):
+    def __init__(self, image_path, labels, transform=None, count=-1):
+        self.transform = transform
+        self.image_files = image_path
+        self.labels = labels
+        if count != -1:
+            if count < len(self.image_files):
+                self.image_files = self.image_files[:count]
+                self.labels = self.labels[:count]
+            else:
+                t = len(self.image_files)
+                for i in range(count - t):
+                    self.image_files.append(random.choice(self.image_files[:t]))
+                    self.labels.append(random.choice(self.labels[:t]))
+
+    def __getitem__(self, index):
+        image_file = self.image_files[index]
+        image = Image.open(image_file)
+        image = image.convert('RGB')
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, self.labels[index]
+
+    def __len__(self):
+        return len(self.image_files)
+
+
+def get_cityscape_globs():
+    from glob import glob
+    import random
+    normal_path = glob('/kaggle/input/cityscapes-5-10-threshold/cityscapes/ID/*')
+    anomaly_path = glob('/kaggle/input/cityscapes-5-10-threshold/cityscapes/OOD/*')
+
+    random.seed(42)
+    random.shuffle(normal_path)
+    train_ratio = 0.7
+    separator = int(train_ratio * len(normal_path))
+    normal_path_train = normal_path[:separator]
+    normal_path_test = normal_path[separator:]
+
+    return normal_path_train, normal_path_test, anomaly_path
+
+
+def get_gta_globs():
+    from glob import glob
+    nums = [f'0{i}' for i in range(1, 10)] + ['10']
+    globs_id = []
+    globs_ood = []
+    for i in range(10):
+        id_path = f'/kaggle/input/gta5-15-5-{nums[i]}/gta5_{i}/gta5_{i}/ID/*'
+        ood_path = f'/kaggle/input/gta5-15-5-{nums[i]}/gta5_{i}/gta5_{i}/OOD/*'
+        globs_id.append(glob(id_path))
+        globs_ood.append(glob(ood_path))
+        print(i, len(globs_id[-1]), len(globs_ood[-1]))
+
+    glob_id = []
+    glob_ood = []
+    for i in range(len(globs_id)):
+        glob_id += globs_id[i]
+        glob_ood += globs_ood[i]
+
+    random.seed(42)
+    random.shuffle(glob_id)
+    train_ratio = 0.7
+    separator = int(train_ratio * len(glob_id))
+    glob_train_id = glob_id[:separator]
+    glob_test_id = glob_id[separator:]
+
+    return glob_train_id, glob_test_id, glob_ood
+
 
 def get_dataset(P, dataset, test_only=False, image_size=None, download=False, eval=False):
     download = True
@@ -312,7 +426,7 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
-    elif dataset == 'isic':
+    elif dataset in ['isic', 'gta']:
         train_transform = transforms.Compose([
             transforms.Resize((image_size[0], image_size[1])),
             transforms.RandomHorizontalFlip(),
@@ -374,6 +488,21 @@ def get_dataset(P, dataset, test_only=False, image_size=None, download=False, ev
         test_set = ISIC2018(image_path=test_path, labels=test_label, transform=test_transform)
         if P.test_id == 2:
             test_set = ISIC2018(image_path=shifted_test_path, labels=shifted_test_label, transform=test_transform)
+    elif dataset == 'gta':
+        n_classes = 2
+        normal_path_train, normal_path_test, anomaly_path = get_cityscape_globs()
+        test_path = normal_path_test + anomaly_path
+        test_label = [0] * len(normal_path_test) + [1] * len(anomaly_path)
+        train_label = [0] * len(normal_path_train)
+        glob_train_id, glob_test_id, glob_ood = get_gta_globs()
+        train_set = GTA(image_path=normal_path_train, labels=train_label,
+                        transform=train_transform)
+        test_set = GTA_Test(image_path=test_path, labels=test_label,
+                            transform=test_transform)
+        if P.test_id == 2:
+            test_set = GTA_Test(image_path=glob_test_id + glob_ood,
+                                labels=[0] * len(glob_test_id) + [1] * len(glob_ood),
+                                transform=test_transform)
 
     elif dataset == 'svhn':
         image_size = (32, 32, 3)
