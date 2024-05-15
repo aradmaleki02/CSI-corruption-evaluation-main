@@ -594,7 +594,7 @@ def three_digits(a: int):
         return f'0{a}'
     return x
 
-
+import pandas as pd
 class WBCDataset(torch.utils.data.Dataset):
     def __init__(self, root1, root2,
                  labels1: pd.DataFrame, labels2: pd.DataFrame, transform=None, train=True, test_id=1, ratio=0.7):
